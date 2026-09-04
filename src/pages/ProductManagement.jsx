@@ -134,8 +134,7 @@ function ProductManagement() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {paginatedData.map((product, index) => {
-                const serverBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '')
-                const imgSrc = product.image ? `${serverBase}/uploads/${product.image}` : null
+                const imgSrc = product.image || null
                 return (
                 <tr key={product._id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-gray-500">{(currentPage - 1) * itemsPerPage + index + 1}</td>
