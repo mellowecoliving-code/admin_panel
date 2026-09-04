@@ -1,22 +1,19 @@
 import { Package, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { createProduct, deleteProduct, getProducts, updateProduct } from '../api/products'
+import { useNavigate } from 'react-router-dom'
+import { deleteProduct, getProducts } from '../api/products'
 import ConfirmDialog from '../components/ConfirmDialog'
-import Modal from '../components/Modal'
 import Pagination from '../components/Pagination'
-import ProductForm from '../components/ProductForm'
 
 function ProductManagement() {
+  const navigate = useNavigate()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
-  const [editingProduct, setEditingProduct] = useState(null)
-  const [showForm, setShowForm] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
-  const [submitting, setSubmitting] = useState(false)
   const [selected, setSelected] = useState(new Set())
   const [showBulkConfirm, setShowBulkConfirm] = useState(false)
 
@@ -72,33 +69,8 @@ function ProductManagement() {
     })
   }
 
-  const openAddForm = () => {
-    setEditingProduct(null)
-    setShowForm(true)
-  }
-
-  const openEditForm = (product) => {
-    setEditingProduct(product)
-    setShowForm(true)
-  }
-
-  const handleSubmit = async (data) => {
-    setSubmitting(true)
-    try {
-      if (editingProduct) {
-        const updated = await updateProduct(editingProduct._id, data)
-        setProducts((prev) => prev.map((p) => (p._id === updated._id ? updated : p)))
-      } else {
-        const created = await createProduct(data)
-        setProducts((prev) => [created, ...prev])
-      }
-      setShowForm(false)
-    } catch (err) {
-      setError('Failed to save product.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
+  const openAddForm = () => navigate('/products/new')
+  const openEditForm = (product) => navigate(`/products/${product._id}/edit`)
 
   const handleDelete = async () => {
     try {
@@ -273,17 +245,6 @@ function ProductManagement() {
             onPageChange={setCurrentPage}
           />
         </div>
-      )}
-
-      {showForm && (
-        <Modal title={editingProduct ? 'Edit Product' : 'Add Product'} onClose={() => setShowForm(false)}>
-          <ProductForm
-            initial={editingProduct}
-            onSubmit={handleSubmit}
-            onCancel={() => setShowForm(false)}
-            submitting={submitting}
-          />
-        </Modal>
       )}
 
       {deleteTarget && (

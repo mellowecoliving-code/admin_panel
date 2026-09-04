@@ -12,6 +12,7 @@ import Coupons from './pages/Coupons'
 import Dashboard from './pages/Dashboard'
 import Login from './pages/Login'
 import OrderManagement from './pages/OrderManagement'
+import ProductFormPage from './pages/ProductFormPage'
 import ProductManagement from './pages/ProductManagement'
 import Profile from './pages/Profile'
 import UserManagement from './pages/UserManagement'
@@ -25,6 +26,8 @@ function AdminLayout() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/products" element={<ProductManagement />} />
+            <Route path="/products/new" element={<ProductFormPage />} />
+            <Route path="/products/:id/edit" element={<ProductFormPage />} />
             <Route path="/orders" element={<OrderManagement />} />
             <Route path="/users" element={<UserManagement />} />
             <Route path="/coupons" element={<Coupons />} />
