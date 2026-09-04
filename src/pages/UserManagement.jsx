@@ -16,6 +16,8 @@ function UserManagement() {
   const [showForm, setShowForm] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const [selected, setSelected] = useState(new Set())
+  const [showBulkConfirm, setShowBulkConfirm] = useState(false)
 
   const loadUsers = async () => {
     setLoading(true)
@@ -36,6 +38,7 @@ function UserManagement() {
 
   useEffect(() => {
     setCurrentPage(1)
+    setSelected(new Set())
   }, [search])
 
   const filtered = users.filter(
@@ -44,6 +47,30 @@ function UserManagement() {
       u.email.toLowerCase().includes(search.toLowerCase()),
   )
   const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
+  const pageIds = paginatedData.map((u) => u._id)
+  const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id))
+  const somePageSelected = pageIds.some((id) => selected.has(id))
+
+  const toggleSelectAll = () => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (allPageSelected) {
+        pageIds.forEach((id) => next.delete(id))
+      } else {
+        pageIds.forEach((id) => next.add(id))
+      }
+      return next
+    })
+  }
+
+  const toggleSelect = (id) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
 
   const handleAdd = async (data) => {
     setSubmitting(true)
@@ -75,18 +102,45 @@ function UserManagement() {
     }
   }
 
+  const handleBulkDelete = async () => {
+    try {
+      await Promise.all([...selected].map((id) => deleteUser(id)))
+      setUsers((prev) => prev.filter((u) => !selected.has(u._id)))
+      setSelected(new Set())
+      setShowBulkConfirm(false)
+    } catch (err) {
+      setError('Failed to delete some users.')
+      setShowBulkConfirm(false)
+    }
+  }
+
   return (
     <div className="p-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold text-gray-900">User Management</h1>
-        <button
-          type="button"
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 rounded-md bg-[#003B95] px-4 py-2 text-sm font-medium text-white hover:bg-[#0B3B95]"
-        >
-          <Plus className="h-4 w-4" />
-          Add User
-        </button>
+        <div className="flex items-center gap-3">
+          {selected.size > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowBulkConfirm(true)}
+              className="flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete Selected
+              <span className="ml-1 rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-bold">
+                {selected.size}
+              </span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2 rounded-md bg-[#003B95] px-4 py-2 text-sm font-medium text-white hover:bg-[#0B3B95]"
+          >
+            <Plus className="h-4 w-4" />
+            Add User
+          </button>
+        </div>
       </div>
 
       <div className="mb-4 flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 sm:w-80">
@@ -114,6 +168,16 @@ function UserManagement() {
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
               <tr>
+                <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={allPageSelected}
+                    ref={(el) => { if (el) el.indeterminate = somePageSelected && !allPageSelected }}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 rounded border-gray-300 text-[#003B95] cursor-pointer accent-[#003B95]"
+                    aria-label="Select all on this page"
+                  />
+                </th>
                 <th className="px-4 py-3">S.No</th>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Email</th>
@@ -125,7 +189,19 @@ function UserManagement() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {paginatedData.map((user, index) => (
-                <tr key={user._id} className="hover:bg-gray-50">
+                <tr
+                  key={user._id}
+                  className={`hover:bg-gray-50 ${selected.has(user._id) ? 'bg-blue-50' : ''}`}
+                >
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(user._id)}
+                      onChange={() => toggleSelect(user._id)}
+                      className="h-4 w-4 rounded border-gray-300 cursor-pointer accent-[#003B95]"
+                      aria-label={`Select ${user.name}`}
+                    />
+                  </td>
                   <td className="px-4 py-3 text-gray-500">{(currentPage - 1) * itemsPerPage + index + 1}</td>
                   <td className="px-4 py-3 font-medium text-gray-900">{user.name}</td>
                   <td className="px-4 py-3 text-gray-600">{user.email}</td>
@@ -184,6 +260,16 @@ function UserManagement() {
           message={`Are you sure you want to delete "${deleteTarget.name}"? This cannot be undone.`}
           onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {showBulkConfirm && (
+        <ConfirmDialog
+          title="Delete Selected Users"
+          message={`Are you sure you want to delete ${selected.size} selected user${selected.size > 1 ? 's' : ''}? This cannot be undone.`}
+          confirmLabel={`Delete ${selected.size}`}
+          onConfirm={handleBulkDelete}
+          onCancel={() => setShowBulkConfirm(false)}
         />
       )}
     </div>
