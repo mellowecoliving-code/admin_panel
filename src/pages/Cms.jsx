@@ -78,7 +78,6 @@ function Cms() {
   )
 
   const handleDragStart = (index) => (e) => {
-    console.log('[DND DEBUG] dragstart, index=', index)
     dragIndex.current = index
     // Firefox refuses to start a drag at all unless dataTransfer carries
     // data — Chrome is lenient about this but Firefox is not, so this is
@@ -87,17 +86,14 @@ function Cms() {
     e.dataTransfer.setData('text/plain', String(index))
   }
   const handleDragEnter = (index) => () => {
-    console.log('[DND DEBUG] dragenter, index=', index)
     overIndex.current = index
   }
   const handleDragEnd = () => {
-    console.log('[DND DEBUG] dragend, dragIndex=', dragIndex.current, 'overIndex=', overIndex.current)
     if (dragIndex.current === null || overIndex.current === null) return
     setCategories((prev) => {
       const next = [...prev]
       const [moved] = next.splice(dragIndex.current, 1)
       next.splice(overIndex.current, 0, moved)
-      console.log('[DND DEBUG] new order=', next.map((c) => c.label))
       return next
     })
     dragIndex.current = null
