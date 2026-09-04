@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { deleteProduct, getProducts } from '../api/products'
 import ConfirmDialog from '../components/ConfirmDialog'
 import Pagination from '../components/Pagination'
+import { resolveMediaUrl } from '../utils/media'
 
 function ProductManagement() {
   const navigate = useNavigate()
@@ -170,7 +171,8 @@ function ProductManagement() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {paginatedData.map((product, index) => {
-                const imgSrc = product.image || null
+                const rawImg = product.images?.[0] || product.image || null
+                const imgSrc = rawImg ? resolveMediaUrl(rawImg) : null
                 return (
                   <tr
                     key={product._id}
