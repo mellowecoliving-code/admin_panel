@@ -119,10 +119,11 @@ function ProductManagement() {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-          <table className="w-full min-w-[720px] text-left text-sm">
+          <table className="w-full min-w-[780px] text-left text-sm">
             <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
               <tr>
                 <th className="px-4 py-3">S.No</th>
+                <th className="px-4 py-3">Image</th>
                 <th className="px-4 py-3">Product</th>
                 <th className="px-4 py-3">Category</th>
                 <th className="px-4 py-3">Price</th>
@@ -132,9 +133,25 @@ function ProductManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {paginatedData.map((product, index) => (
+              {paginatedData.map((product, index) => {
+                const serverBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '')
+                const imgSrc = product.image ? `${serverBase}/uploads/${product.image}` : null
+                return (
                 <tr key={product._id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-gray-500">{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                  <td className="px-4 py-3">
+                    {imgSrc ? (
+                      <img
+                        src={imgSrc}
+                        alt={product.name}
+                        className="h-10 w-10 rounded-md object-cover border border-gray-200"
+                      />
+                    ) : (
+                      <div className="h-10 w-10 rounded-md bg-gray-100 border border-gray-200 flex items-center justify-center">
+                        <Package className="h-4 w-4 text-gray-300" />
+                      </div>
+                    )}
+                  </td>
                   <td className="px-4 py-3 font-medium text-gray-900">{product.name}</td>
                   <td className="px-4 py-3 text-gray-600">{product.category}</td>
                   <td className="px-4 py-3 text-gray-600">₹{product.price.toLocaleString('en-IN')}</td>
@@ -170,7 +187,7 @@ function ProductManagement() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
           <Pagination
