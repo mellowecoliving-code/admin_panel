@@ -3,6 +3,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Sidebar from './components/Sidebar'
 import { AuthProvider } from './context/AuthContext'
 import Cms from './pages/Cms'
+import CmsFooter from './pages/CmsFooter'
 import CmsHowItsMade from './pages/CmsHowItsMade'
 import CmsHowItWorks from './pages/CmsHowItWorks'
 import CmsNewsletter from './pages/CmsNewsletter'
@@ -37,6 +38,7 @@ function AdminLayout() {
             <Route path="/cms/why-mellow" element={<CmsWhyMellow />} />
             <Route path="/cms/testimonials" element={<CmsTestimonials />} />
             <Route path="/cms/newsletter" element={<CmsNewsletter />} />
+            <Route path="/cms/footer" element={<CmsFooter />} />
             <Route path="/profile" element={<Profile />} />
           </Routes>
         </main>

@@ -17,6 +17,8 @@ function OrderManagement() {
   const itemsPerPage = 10
   const [viewOrder, setViewOrder] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [selected, setSelected] = useState(new Set())
+  const [showBulkConfirm, setShowBulkConfirm] = useState(false)
 
   const loadOrders = async () => {
     setLoading(true)
@@ -34,10 +36,35 @@ function OrderManagement() {
   useEffect(() => {
     loadOrders()
     setCurrentPage(1)
+    setSelected(new Set())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter])
 
   const paginatedData = orders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
+  const pageIds = paginatedData.map((o) => o._id)
+  const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id))
+  const somePageSelected = pageIds.some((id) => selected.has(id))
+
+  const toggleSelectAll = () => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (allPageSelected) {
+        pageIds.forEach((id) => next.delete(id))
+      } else {
+        pageIds.forEach((id) => next.add(id))
+      }
+      return next
+    })
+  }
+
+  const toggleSelect = (id) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
 
   const handleStatusChange = async (order, status) => {
     const updated = await updateOrderStatus(order._id, status)
@@ -55,22 +82,49 @@ function OrderManagement() {
     }
   }
 
+  const handleBulkDelete = async () => {
+    try {
+      await Promise.all([...selected].map((id) => deleteOrder(id)))
+      setOrders((prev) => prev.filter((o) => !selected.has(o._id)))
+      setSelected(new Set())
+      setShowBulkConfirm(false)
+    } catch (err) {
+      setError('Failed to delete some orders.')
+      setShowBulkConfirm(false)
+    }
+  }
+
   return (
     <div className="p-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold text-gray-900">Order Management</h1>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
-        >
-          <option value="">All Statuses</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-3">
+          {selected.size > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowBulkConfirm(true)}
+              className="flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete Selected
+              <span className="ml-1 rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-bold">
+                {selected.size}
+              </span>
+            </button>
+          )}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+          >
+            <option value="">All Statuses</option>
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {error && <p className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
@@ -87,6 +141,16 @@ function OrderManagement() {
           <table className="w-full min-w-[760px] text-left text-sm">
             <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
               <tr>
+                <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={allPageSelected}
+                    ref={(el) => { if (el) el.indeterminate = somePageSelected && !allPageSelected }}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 rounded border-gray-300 cursor-pointer accent-[#003B95]"
+                    aria-label="Select all on this page"
+                  />
+                </th>
                 <th className="px-4 py-3">S.No</th>
                 <th className="px-4 py-3">Order ID</th>
                 <th className="px-4 py-3">Customer</th>
@@ -99,7 +163,19 @@ function OrderManagement() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {paginatedData.map((order, index) => (
-                <tr key={order._id} className="hover:bg-gray-50">
+                <tr
+                  key={order._id}
+                  className={`hover:bg-gray-50 ${selected.has(order._id) ? 'bg-blue-50' : ''}`}
+                >
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(order._id)}
+                      onChange={() => toggleSelect(order._id)}
+                      className="h-4 w-4 rounded border-gray-300 cursor-pointer accent-[#003B95]"
+                      aria-label={`Select order #${order._id.slice(-6).toUpperCase()}`}
+                    />
+                  </td>
                   <td className="px-4 py-3 text-gray-500">{(currentPage - 1) * itemsPerPage + index + 1}</td>
                   <td className="px-4 py-3 font-mono text-xs text-gray-500">
                     <button
@@ -205,6 +281,16 @@ function OrderManagement() {
           message={`Are you sure you want to delete order #${deleteTarget._id.slice(-6).toUpperCase()}? This cannot be undone.`}
           onConfirm={handleDelete}
           onCancel={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {showBulkConfirm && (
+        <ConfirmDialog
+          title="Delete Selected Orders"
+          message={`Are you sure you want to delete ${selected.size} selected order${selected.size > 1 ? 's' : ''}? This cannot be undone.`}
+          confirmLabel={`Delete ${selected.size}`}
+          onConfirm={handleBulkDelete}
+          onCancel={() => setShowBulkConfirm(false)}
         />
       )}
     </div>

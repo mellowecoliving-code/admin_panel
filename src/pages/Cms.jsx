@@ -89,15 +89,22 @@ function Cms() {
     overIndex.current = index
   }
   const handleDragEnd = () => {
-    if (dragIndex.current === null || overIndex.current === null) return
-    setCategories((prev) => {
-      const next = [...prev]
-      const [moved] = next.splice(dragIndex.current, 1)
-      next.splice(overIndex.current, 0, moved)
-      return next
-    })
+    // Capture into locals before resetting the refs — setCategories's
+    // updater function runs asynchronously, so by the time React actually
+    // calls it, dragIndex.current/overIndex.current would already be back
+    // to null (read as 0 by splice), silently turning this into a no-op.
+    const from = dragIndex.current
+    const to = overIndex.current
     dragIndex.current = null
     overIndex.current = null
+    if (from === null || to === null || from === to) return
+
+    setCategories((prev) => {
+      const next = [...prev]
+      const [moved] = next.splice(from, 1)
+      next.splice(to, 0, moved)
+      return next
+    })
   }
 
   if (loading) return <div className="p-6 text-sm text-gray-500">Loading...</div>

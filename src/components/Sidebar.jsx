@@ -1,6 +1,8 @@
 import { FileText, LayoutDashboard, LogOut, Package, ShoppingBag, Tag, User, Users } from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useCmsContent } from '../hooks/useCmsContent'
+import { resolveMediaUrl } from '../utils/media'
 
 const links = [
   { to: '/', label: 'Dashboard', end: true, icon: LayoutDashboard },
@@ -16,6 +18,7 @@ const CMS_SUBLINKS = [
   { to: '/cms/why-mellow', label: 'Why Mellow' },
   { to: '/cms/testimonials', label: 'Testimonials' },
   { to: '/cms/newsletter', label: 'Enjoying our content?' },
+  { to: '/cms/footer', label: 'Footer' },
 ]
 
 const navItemClass = ({ isActive }) =>
@@ -26,6 +29,8 @@ const navItemClass = ({ isActive }) =>
 function Sidebar() {
   const { admin, logout } = useAuth()
   const navigate = useNavigate()
+  const cms = useCmsContent()
+  const logoUrl = cms.logo?.url
 
   const handleLogout = async () => {
     await logout()
@@ -34,8 +39,11 @@ function Sidebar() {
 
   return (
     <nav className="sticky top-0 flex h-screen w-56 shrink-0 flex-col overflow-y-auto border-r border-gray-200 p-4">
-      <div className="mb-6 px-2 text-lg font-bold tracking-tight text-gray-900">
-        mellow <span className="text-gray-400">admin</span>
+      <div className="mb-6 flex items-center gap-2 px-2">
+        {logoUrl && <img src={resolveMediaUrl(logoUrl)} alt="Mellow" className="h-6 w-auto" />}
+        <span className="text-lg font-bold tracking-tight text-gray-900">
+          mellow <span className="text-gray-400">admin</span>
+        </span>
       </div>
       <ul className="flex-1 space-y-1">
         {links.map(({ to, label, end, icon: Icon }) => (

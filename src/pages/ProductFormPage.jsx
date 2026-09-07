@@ -59,7 +59,7 @@ function ProductFormPage() {
       {loading ? (
         <p className="text-sm text-gray-500">Loading product...</p>
       ) : (
-        <div className="max-w-2xl rounded-lg border border-gray-200 bg-white p-6">
+        <div className="max-w-5xl rounded-lg border border-gray-200 bg-white p-6">
           <ProductForm
             initial={product}
             onSubmit={handleSubmit}

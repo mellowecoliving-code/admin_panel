@@ -71,7 +71,7 @@ function ProductManagement() {
   }
 
   const openAddForm = () => navigate('/products/new')
-  const openEditForm = (product) => navigate(`/products/${product._id}/edit`)
+  const openEditForm = (product) => navigate(`/products/${product.slug || product._id}/edit`)
 
   const handleDelete = async () => {
     try {
@@ -171,7 +171,7 @@ function ProductManagement() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {paginatedData.map((product, index) => {
-                const rawImg = product.images?.[0] || product.image || null
+                const rawImg = product.image || product.images?.[0] || null
                 const imgSrc = rawImg ? resolveMediaUrl(rawImg) : null
                 return (
                   <tr
