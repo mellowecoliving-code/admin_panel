@@ -140,7 +140,7 @@ const FABRIC_TYPES = [
   'Cotton Stretch',
 ]
 
-function ProductForm({ initial, onSubmit, onCancel, submitting }) {
+function ProductForm({ initial, onSubmit, onCancel, submitting, onChange }) {
   const [form, setForm] = useState({
     name: initial?.name || '',
     description: initial?.description || '',
@@ -164,6 +164,14 @@ function ProductForm({ initial, onSubmit, onCancel, submitting }) {
     colorImages: initial?.colorImages || [],
   })
   const [error, setError] = useState('')
+
+  // Lets a parent render a live preview of what's being edited (e.g. a
+  // storefront-style card) without this component knowing anything about
+  // how that preview looks.
+  useEffect(() => {
+    onChange?.(form)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form])
 
   const hasVariants = form.variants.length > 0
   const totalVariantStock = form.variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0)

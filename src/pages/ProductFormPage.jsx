@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { createProduct, getProduct, updateProduct } from '../api/products'
 import ProductForm from '../components/ProductForm'
+import ProductPreviewCard from '../components/ProductPreviewCard'
 
 function ProductFormPage() {
   const { id } = useParams()
@@ -13,6 +14,7 @@ function ProductFormPage() {
   const [loading, setLoading] = useState(isEditing)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [preview, setPreview] = useState(null)
 
   useEffect(() => {
     if (!isEditing) return
@@ -59,13 +61,21 @@ function ProductFormPage() {
       {loading ? (
         <p className="text-sm text-gray-500">Loading product...</p>
       ) : (
-        <div className="max-w-5xl rounded-lg border border-gray-200 bg-white p-6">
-          <ProductForm
-            initial={product}
-            onSubmit={handleSubmit}
-            onCancel={() => navigate('/products')}
-            submitting={submitting}
-          />
+        <div className="flex max-w-6xl items-start gap-6">
+          <div className="flex-1 rounded-lg border border-gray-200 bg-white p-6">
+            <ProductForm
+              initial={product}
+              onSubmit={handleSubmit}
+              onCancel={() => navigate('/products')}
+              submitting={submitting}
+              onChange={setPreview}
+            />
+          </div>
+          {preview && (
+            <div className="sticky top-6 shrink-0 rounded-lg border border-gray-200 bg-white p-4">
+              <ProductPreviewCard form={preview} />
+            </div>
+          )}
         </div>
       )}
     </div>
